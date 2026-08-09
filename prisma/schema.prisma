@@ -17,6 +17,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  orders        Order[]
 
   @@unique([email])
   @@map("user")
@@ -68,4 +69,64 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+enum OrderStatus {
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+}
+
+model Order {
+  id           String      @id @default(cuid())
+  customerName String
+  dueDate      DateTime
+  status       OrderStatus @default(PENDING)
+
+  // relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lineItems LineItem[]
+  payments  Payment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("order")
+}
+
+model LineItem {
+  id          String  @id @default(cuid())
+  description String
+  quantity    Int
+  unitPrice   Decimal
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@map("line_item")
+}
+
+model Payment {
+  id       String   @id @default(cuid())
+  amount   Decimal
+  date     DateTime
+  note     String?
+  metaData Json?
+
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@map("payment")
 }
