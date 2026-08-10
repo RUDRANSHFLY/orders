@@ -130,3 +130,27 @@ model Payment {
   @@index([orderId])
   @@map("payment")
 }
+
+enum AuditAction {
+  ORDER_CREATED
+  ORDER_UPDATED
+  ORDER_DELETED
+  PAYMENT_RECORDED
+  STATUS_CHANGED
+}
+
+model AuditLog {
+  id       String      @id @default(cuid())
+  action   AuditAction
+  entity   String // "Order" || "Payment" | "LineItem"
+  entityId String
+  userId   String
+  before   Json? // snapshot pre-change
+  after    Json? // snapshot post-change
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityId])
+  @@map("audit_log")
+}
