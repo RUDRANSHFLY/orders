@@ -34,5 +34,12 @@ export const getOrderQuerySchema = z.object({
   status: orderStatusSchema.optional(),
 });
 
+export const updatOrderSchema = createOrderSchema
+  .partial()
+  .refine((data) => Object.values(data).some((value) => value !== undefined), {
+    message: "At least one field must be provided for update.",
+  });
+
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type OrderStatusInput = z.infer<typeof orderStatusSchema>;
+export type UpdateOrderInput = z.infer<typeof updatOrderSchema>;

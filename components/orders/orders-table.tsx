@@ -42,9 +42,7 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => router.push(`/orders/${order.id}`)}
               >
-                <TableCell className="font-medium">
-                  {order.customerName}
-                </TableCell>
+                <TableCell className="font-medium">{order.customer}</TableCell>
                 <TableCell>
                   <StatusBadge status={order.status} />
                 </TableCell>

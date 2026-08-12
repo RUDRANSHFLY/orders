@@ -29,6 +29,7 @@ export function OrdersDashboard() {
   const [status, setStatus] = useState<"ALL" | OrderStatus>("ALL");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
@@ -47,6 +48,7 @@ export function OrdersDashboard() {
       setLoading(false);
     }
   }, [status]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => void loadOrders(), 0);
     return () => window.clearTimeout(timer);

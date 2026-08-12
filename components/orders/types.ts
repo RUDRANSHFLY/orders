@@ -9,7 +9,7 @@ export type OrderStatus = (typeof orderStatuses)[number];
 
 export type Order = {
   id: string;
-  customerName: string;
+  customer: string;
   dueDate: string;
   status: OrderStatus;
   createdAt: string;

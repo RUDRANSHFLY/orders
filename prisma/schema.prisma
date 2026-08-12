@@ -8,16 +8,17 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String     @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean    @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   sessions      Session[]
   accounts      Account[]
   orders        Order[]
+  auditLogs     AuditLog[]
 
   @@unique([email])
   @@map("user")
@@ -79,10 +80,10 @@ enum OrderStatus {
 }
 
 model Order {
-  id           String      @id @default(cuid())
-  customerName String
-  dueDate      DateTime
-  status       OrderStatus @default(PENDING)
+  id       String      @id @default(cuid())
+  customer String
+  dueDate  DateTime
+  status   OrderStatus @default(PENDING)
 
   // relations
   userId String
@@ -94,6 +95,7 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([userId, id])
   @@index([userId])
   @@index([status])
   @@index([dueDate])
@@ -144,12 +146,15 @@ model AuditLog {
   action   AuditAction
   entity   String // "Order" || "Payment" | "LineItem"
   entityId String
-  userId   String
   before   Json? // snapshot pre-change
   after    Json? // snapshot post-change
 
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
 
+  @@index([userId, entityId])
   @@index([userId])
   @@index([entityId])
   @@map("audit_log")
