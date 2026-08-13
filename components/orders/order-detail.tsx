@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/orders/status-badge";
 import { DeleteOrderButton } from "@/components/orders/delete-order-button";
+import { RecordPaymentDialog } from "@/components/orders/record-payment-dialog";
+import { PaymentsList } from "@/components/orders/payments-list";
+import { OrderAuditTimeline } from "@/components/orders/order-audit-timeline";
 import {
   Table,
   TableBody,
@@ -23,8 +26,12 @@ export function OrderDetailView({ order }: { order: OrderDetail }) {
     (sum, payment) => sum + Number(payment.amount),
     0,
   );
+  const amountDue = Math.max(total - paid, 0);
+  const isPaid = order.status === "PAID" || amountDue <= 0;
+
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      {/* Top Header Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm text-muted-foreground">Order</p>
@@ -32,7 +39,12 @@ export function OrderDetailView({ order }: { order: OrderDetail }) {
             {order.id}
           </h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <RecordPaymentDialog
+            orderId={order.id}
+            amountDue={amountDue}
+            isPaid={isPaid}
+          />
           <Button
             variant="outline"
             render={<Link href={`/orders/${order.id}/edit`}>Edit</Link>}
@@ -40,29 +52,53 @@ export function OrderDetailView({ order }: { order: OrderDetail }) {
           <DeleteOrderButton id={order.id} />
         </div>
       </div>
+
+      {/* Summary Cards */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Order Summary</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <Info label="Status">
               <StatusBadge status={order.status} />
             </Info>
+            <Info label="Total">{formatCurrency(total)}</Info>
+            <Info label="Amount Paid">
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                {formatCurrency(paid)}
+              </span>
+            </Info>
+            <Info label="Amount Due">
+              <span
+                className={`font-semibold ${
+                  amountDue > 0
+                    ? "text-amber-600 dark:text-amber-400"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {formatCurrency(amountDue)}
+              </span>
+            </Info>
             <Info label="Due date">{formatDate(order.dueDate)}</Info>
             <Info label="Created">{formatDate(order.createdAt)}</Info>
-            <Info label="Updated">{formatDate(order.updatedAt)}</Info>
           </CardContent>
         </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Customer</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="font-medium">{order.customer}</p>
+          <CardContent className="space-y-2">
+            <p className="font-medium text-lg">{order.customer}</p>
+            <div className="text-xs text-muted-foreground">
+              Last updated: {formatDate(order.updatedAt)}
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Line Items Card */}
       <Card>
         <CardHeader>
           <CardTitle>Line Items</CardTitle>
@@ -88,7 +124,7 @@ export function OrderDetailView({ order }: { order: OrderDetail }) {
                     <TableCell className="text-right">
                       {formatCurrency(Number(item.unitPrice))}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right font-medium">
                       {formatCurrency(item.quantity * Number(item.unitPrice))}
                     </TableCell>
                   </TableRow>
@@ -106,45 +142,30 @@ export function OrderDetailView({ order }: { order: OrderDetail }) {
           </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Settlement / Audit</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {order.payments.length ? (
-            <div className="space-y-3">
-              {order.payments.map((payment) => (
-                <div
-                  className="flex flex-col justify-between gap-1 border-b pb-3 last:border-0 last:pb-0 sm:flex-row"
-                  key={payment.id}
-                >
-                  <span>
-                    {formatDate(payment.date)}
-                    {payment.note ? ` · ${payment.note}` : ""}
-                  </span>
-                  <span className="font-medium">
-                    {formatCurrency(Number(payment.amount))}
-                  </span>
-                </div>
-              ))}
-              <div className="flex justify-between border-t pt-3 font-semibold">
-                <span>Paid / outstanding</span>
-                <span>
-                  {formatCurrency(paid)} /{" "}
-                  {formatCurrency(Math.max(total - paid, 0))}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              No settlement recorded.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+
+      {/* Payments History Table */}
+      <PaymentsList
+        orderId={order.id}
+        payments={order.payments}
+        amountDue={amountDue}
+        isPaid={isPaid}
+      />
+
+      {/* Audit Logs Section */}
+      {order.logs && order.logs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Audit History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OrderAuditTimeline logs={order.logs} />
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }
+
 function Info({
   label,
   children,
@@ -154,8 +175,8 @@ function Info({
 }) {
   return (
     <div>
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <div className="mt-1">{children}</div>
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <div className="mt-1 text-sm">{children}</div>
     </div>
   );
 }

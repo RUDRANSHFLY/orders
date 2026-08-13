@@ -33,6 +33,7 @@ export type OrderDetail = {
     note: string | null;
     createdAt: string | Date;
   }>;
+  logs?: any[];
 };
 
 type ApiErrorPayload = {
@@ -97,3 +98,42 @@ export function deleteOrder(id: string) {
 }
 
 export type CreateOrderData = z.infer<typeof createOrderSchema>;
+
+export type RecordPaymentData = {
+  amount: number;
+  date: Date | string;
+  note?: string;
+};
+
+export type RecordPaymentResponse = {
+  payment: {
+    id: string;
+    amount: string;
+    date: string;
+    note: string | null;
+    orderId: string;
+    createdAt: string;
+  };
+  order: {
+    id: string;
+    total: string;
+    amountPaid: string;
+    amountDue: string;
+    status: OrderStatus;
+  };
+};
+
+export function recordPayment(orderId: string, data: RecordPaymentData) {
+  return request<RecordPaymentResponse>(
+    `/api/orders/${encodeURIComponent(orderId)}/payments`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: Number(data.amount),
+        date: data.date instanceof Date ? data.date.toISOString() : data.date,
+        note: data.note,
+      }),
+    },
+  );
+}
