@@ -1,5 +1,11 @@
-export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black"></div>
-  );
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth/auth";
+
+export default async function Home() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  redirect(session?.user ? "/orders" : "/signin");
 }

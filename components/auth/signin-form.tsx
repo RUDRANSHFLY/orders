@@ -45,7 +45,7 @@ export function SignInForm() {
     setMessage(undefined);
     const { error } = await signIn.email(v);
     if (error) return setMessage(error.message || "Invalid email or password.");
-    router.replace("/profile");
+    router.replace("/orders");
   }
   const e = form.formState.errors;
   return (

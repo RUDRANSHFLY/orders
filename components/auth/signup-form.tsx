@@ -51,7 +51,7 @@ export function SignUpForm() {
     if (error)
       return setMessage(error.message || "We couldn�t create your account.");
     toast.success("Account created");
-    router.replace("/profile");
+    router.replace("/orders");
   }
   const e = form.formState.errors;
   return (
