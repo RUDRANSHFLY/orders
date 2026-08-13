@@ -18,7 +18,6 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { Prisma } from "@/app/generated/prisma/client";
 
 /* ------------------------------------------------------------------ */
 /*  Types — mirrors the AuditLog / AuditAction / OrderStatus models    */
@@ -53,8 +52,8 @@ export interface AuditLogEntry {
   action: AuditAction;
   entity: string;
   entityId: string;
-  before: Prisma.JsonValue | null;
-  after: Prisma.JsonValue | null;
+  before: Record<string, unknown> | null;
+  after: Record<string, unknown> | null;
   createdAt: string | Date;
   user: AuditLogUser;
 }
